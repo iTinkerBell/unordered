@@ -1,0 +1,60 @@
+[[header]]
+
+[[content]]
+[[header_concurrent_flat_set]]
+=== `++<++boost/unordered/concurrent++_++flat++_++set.hpp++>++` 概要
+
+定义
+link:reference/concurrent_flat_set_zh_Hans.adoc#concurrent_flat_set[`boost::concurrent++_++flat++_++set`]
+及其相关函数和别名模板。
+
+....
+namespace boost {
+namespace unordered {
+
+  template<class Key,
+           class Hash = boost::hash<Key>,
+           class Pred = std::equal_to<Key>,
+           class Allocator = std::allocator<Key>>
+  class concurrent_flat_set;
+
+  // 相等比较
+  template<class Key, class Hash, class Pred, class Alloc>
+    bool operator==(const concurrent_flat_set<Key, Hash, Pred, Alloc>& x,
+                    const concurrent_flat_set<Key, Hash, Pred, Alloc>& y);
+
+  template<class Key, class Hash, class Pred, class Alloc>
+    bool operator!=(const concurrent_flat_set<Key, Hash, Pred, Alloc>& x,
+                    const concurrent_flat_set<Key, Hash, Pred, Alloc>& y);
+
+  // 交换
+  template<class Key, class Hash, class Pred, class Alloc>
+    void swap(concurrent_flat_set<Key, Hash, Pred, Alloc>& x,
+              concurrent_flat_set<Key, Hash, Pred, Alloc>& y)
+      noexcept(noexcept(x.swap(y)));
+
+  // 擦除
+  template<class K, class H, class P, class A, class Predicate>
+    typename concurrent_flat_set<K, H, P, A>::size_type
+      erase_if(concurrent_flat_set<K, H, P, A>& c, Predicate pred);
+
+  // Pmr别名（C++17及以上）
+  namespace pmr {
+    template<class Key,
+             class Hash = boost::hash<Key>,
+             class Pred = std::equal_to<Key>>
+    using concurrent_flat_set =
+      boost::unordered::concurrent_flat_set<Key, Hash, Pred,
+        std::pmr::polymorphic_allocator<Key>>;
+  } // 命名空间 pmr
+
+} // 命名空间 unordered
+
+using unordered::concurrent_flat_set;
+
+} // 命名空间 boost
+....
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年 10月 31日 21:35:18 UTC

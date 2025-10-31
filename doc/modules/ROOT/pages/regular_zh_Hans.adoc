@@ -1,0 +1,187 @@
+[[header]]
+== 常规容器
+
+[[content]]
+[[preamble]]
+Boost.Unordered
+的闭寻址容器（`boost::unordered++_++set`、`boost::unordered++_++map`、`boost::unordered++_++multiset`
+与 `boost::unordered++_++multimap`）完全符合 C{plus}{plus}
+无序关联容器的标准规范。因此，对于熟悉`std::unordered++_++set`、`std::unordered++_++map`
+等用法的用户，可直接将其替换为Boost.Unordered
+中的同名容器。开放寻址容器（`boost::unordered++_++node++_++set`、`boost::unordered++_++node++_++map`、`boost::unordered++_++flat++_++set`
+和
+`boost::unordered++_++flat++_++map`）的接口与之高度相似，但存在一些细微差异，详见专门的
+link:compliance_zh_Hans.adoc#compliance_open_addressing_containers[标准符合性章节]。
+
+对于没有哈希容器经验但熟悉常规关联容器（`std::set`、`std::map`、`std::multiset`
+和 `std::multimap`）的读者，Boost.Unordered 容器的使用方式与之类似：
+
+[source,highlight]
+----
+typedef boost::unordered_map<std::string, int> map;
+map x;
+x["one"] = 1;
+x["two"] = 2;
+x["three"] = 3;
+
+assert(x.at("one") == 1);
+assert(x.find("missing") == x.end());
+----
+
+但由于元素不按顺序存储，以下代码的输出结果：
+
+[source,highlight]
+----
+for(const map::value_type& i: x) {
+    std::cout<<i.first<<","<<i.second<<"\n";
+}
+----
+
+可能以任意顺序输出。例如，结果可能为：
+
+[source,highlight]
+----
+two,2
+one,1
+three,3
+----
+
+其他差异列于 link:regular_zh_Hans.adoc#comparison[与关联容器的对比] 章节中。
+
+[[regular_iterator_invalidation]]
+=== 迭代器失效
+
+标准未明确规定除`rehash` 和 `reserve`
+之外的成员函数如何影响桶数量，但`insert`
+操作仅当导致容器负载超过最大允许值时才会使迭代器失效。在大多数实现中，这意味着
+`insert`
+仅在此种情况下才会改变桶的数量。迭代器可能因调用`insert`、`rehash` 或
+`reserve` 而失效。
+
+对于基于节点的容器（`boost::unordered++_[++multi++]++set`、`boost::unordered++_[++multi++]++map`、`boost::unordered++_++node++_++set`、`boost::unordered++_++node++_++map`），其指针和引用永远不会失效。但对于
+`boost::unordered++_++flat++_++set` 和
+`boost::unordered++_++flat++_++map`，在发生重哈希时指针和引用将会失效：这是因为这些容器将元素直接存储在桶中，当分配新的桶数组时，必须通过移动构造来转移元素。
+
+类似于对 `vector` 使用 `reserve` 的方法，在插入大量元素前先调用
+`reserve`
+是推荐做法。这将避免昂贵的重新哈希操作，并确保迭代器在后续插入中保持有效。若需向容器
+`x` 插入 `n` 个元素，可先调用：
+
+[source,highlight]
+----
+x.reserve(n);
+----
+
+注意::
+  `reserve(n)` 为至少 `n`
+  个元素预留空间，通过分配足够的桶数量来确保容器负载不超过最大负载因子。
+  +
+  由于最大负载因子被定义为元素数量与可用桶总数之比，该函数在逻辑上等效于：
+  +
+[source,highlight]
+----
+x.rehash(std::ceil(n / x.max_load_factor()))
+----
+  +
+  关于 `rehash`
+  函数的link:reference/unordered_map_zh_Hans.adoc#unordered_map_rehash[详细信息请参阅参考文档]。
+
+[[comparison]]
+=== 与关联容器的对比
+
+.表 1 接口差异
+[width="100%",cols="50%,50%",options="header",]
+|===
+|关联容器 |无序关联容器
+|通过排序关系 `Compare`进行 参数化 |通过函数对象 `Hash` 和等价关系
+`Pred` 进行参数化
+
+|可通过成员函数 `key++_++comp()` 获取用于比较键的
+`key++_++compare`类型对象，通过成员函数 `value++_++comp()`
+获取用于比较值的 `value++_++compare`类型对象。 |可通过成员函数
+`hash++_++function()` 获取用于计算键哈希值的 `hasher`
+函数，通过成员函数`key++_++eq()` 获取用于判断键等价的 `key++_++equal`
+函数。未提供用于比较或哈希整个键值对的函数。
+
+|构造函数提供用于指定比较函数对象的可选参数。
+|构造函数提供可选参数，用于指定初始最小桶数量、哈希函数及相等性判断对象。
+
+|当 `!Compare(k1, k2) && !Compare(k2, k1)`为真（TRUE） 时，键 `k1`与`k2`
+视为等价。 |当 `Pred(k1, k2)` 返回`TRUE`时 ，键 `k1`与`k2` 视为等价
+
+|成员函数 `lower++_++bound(k)` 和 `upper++_++bound(k)`
+|无等效操作。由于元素非有序存储，`lower++_++bound` 和 `upper++_++bound`
+无意义。
+
+|当键 `k` 不存在于容器中时，`equal++_++range(k)` 返回 `k`
+应插入位置的空范围。 |当键 `k` 不存在于容器中时，`equal++_++range(k)`
+返回的区间位于容器末尾。由于 `k`
+可能被插入到多个位置，因此无法返回一个具有确定位置的区间。 +
+*闭寻址容器：* 如需查找 `k` 将被插入的桶，可使用 `bucket(k)`
+方法。但需注意，插入操作可能引发容器重哈希——这意味着元素最终可能被存入不同的桶中。
+
+|`iterator`与`const++_++iterator` 属于双向迭代器类别。
+|`iterator`与`const++_++iterator` 至少属于前向迭代器类别。
+
+|指向容器元素的迭代器、指针及引用永不失效。
+|link:regular_zh_Hans.adoc#regular_iterator_invalidation[插入或重哈希操作可能引发迭代器失效]。 +
+*基于节点的容器：* 元素的指针和引用永不失效。 +
+*扁平容器：* 当发生重哈希时，元素的指针和引用将失效。
+
+|迭代器按比较对象定义的顺序遍历容器。
+|迭代器以任意顺序遍历容器，该顺序可能随元素插入而改变，但等价元素始终相邻排列。
+
+|无等效功能 |*闭寻址容器：*
+可通过局部迭代器遍历单个桶内的元素.（不要求局部迭代器与容器迭代器的遍历顺序存在任何关联.）
+
+|可通过 `==`、`!=`、`++<++`、`++<++=`、`++>++`、`++>++=`
+运算符进行比较。 |可通过 `==` 与 `!=` 运算符进行比较。
+
+| |使用提示符插入时，实现允许忽略提示信息。
+|===
+
+'''''
+
+.表 2 复杂度保证
+[width="100%",cols="34%,33%,33%",options="header",]
+|===
+|操作 |关联容器 |无序关联容器
+|空容器的构造 |常数时间 |O(_n_)，其中 _n_ 表示桶的最小数量。
+
+|构建包含 _N_ 个元素范围的容器 |O(_N log N_)，若该范围按
+`value++_++comp()` 排序则为 O(_N_) |平均 O(_N_)，最差 O(_N^2^_)
+
+|插入单个元素 |对数时间 |平均情况常数时间，最坏情况线性时间
+
+|使用提示插入单个元素 |若在提示后立即插入 `t`
+个元素，则均摊常数时间，否为则对数时间
+|平均情况常数时间，最坏情况线性时间（与常规插入操作相同）。
+
+|插入包含 _N_ 个元素的范围 |_N_ log(`size()` {plus} _N_) |平均情况
+O(_N_)，最坏情况 O(_N_ ++*++ `size()`)
+
+|按键 `k` 删除 |O(log(`size()`) {plus} `count(k)`)
+|平均情况：O(`count(k)`)，最差情况：O(`size()`)
+
+|通过迭代器删除单个元素 |均摊常数时间
+|平均情况：O(1)，最差情况：O(`size()`)
+
+|删除包含 _N_ 个元素的范围 |O(log(`size()`) {plus} _N_)
+|平均情况：O(_N_)，最差情况：O(`size()`)
+
+|清空容器 |O(`size()`) |O(`size()`)
+
+|查找 |对数时间 |平均情况：O(1)，最差情况：O(`size()`)
+
+|统计 |O(log(`size()`) {plus} `count(k)`)
+|平均情况：O(1)，最差情况：O(`size()`)
+
+|`equal++_++range(k)` |对数时间
+|平均情况：O(`count(k)`)，最差情况：O(`size()`)
+
+|`lower++_++bound`、`upper++_++bound` |对数时间 |不适用
+|===
+
+[[footer]]
+[[footer-text]]
+最后更新于 2025年 10月 31日 21:43:12 UTC

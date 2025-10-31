@@ -1,0 +1,152 @@
+[[header]]
+== 标准符合性
+
+[[content]]
+[[compliance_closed_addressing_containers]]
+=== 闭寻址容器
+
+`boost::unordered++_[++multi++]++set` 和
+`boost::unordered++_[++multi++]++map` 为
+C{plus}{plus}11（或更高版本）编译器提供了符合最新 C{plus}{plus}
+标准修订版的无序关联容器实现，仅存在文档所述的极微小偏差。这些容器完全满足
+ https://en.cppreference.com/w/cpp/named_req/AllocatorAwareContainer[分配器感知]
+要求，并支持
+ https://en.cppreference.com/w/cpp/named_req/Allocator#Fancy_pointers[花式指针]。
+
+[[compliance_deduction_guides]]
+==== 推导指引
+
+ https://en.cppreference.com/w/cpp/language/class_template_argument_deduction[类模板参数推导
+(CTAD)] 的推导指南仅在 C{plus}{plus}17（或更高版本）编译器中可用。
+
+[[compliance_piecewise_pair_emplacement]]
+==== 分段式 Pair 就地构造
+
+根据标准规范，`boost::unordered++_[++multi++]++map::emplace` 支持 pair
+的分段构造：
+
+[source,highlight]
+----
+boost::unordered_multimap<std::string, std::complex> x;
+
+x.emplace(
+    std::piecewise_construct,
+    std::make_tuple("key"), std::make_tuple(1, 2));
+----
+
+此外，通过非标准接口 `boost::unordered::piecewise++_++construct` 与
+Boost.Tuple 提供相同功能：
+
+[source,highlight]
+----
+x.emplace(
+    boost::unordered::piecewise_construct,
+    boost::make_tuple("key"), boost::make_tuple(1, 2));
+----
+
+此特性为保持与 Boost.Unordered
+旧版本的向后兼容性而保留：建议用户更新代码以使用
+`std::piecewise++_++construct` 与`std::tuple`。
+
+[[compliance_swap]]
+==== 交换
+
+执行交换操作时，当前未通过调用 `swap`函数来交换`Pred` 和 `Hash`
+对象，而是使用其复制构造函数。因此，在交换过程中可能会因其复制构造函数而抛出异常。
+
+[[compliance_open_addressing_containers]]
+=== 开放寻址容器
+
+C{plus}{plus}
+标准目前未规定任何开放寻址容器的实现规范，因此`boost::unordered++_++flat++_++set`/`unordered++_++node++_++set`
+与 `boost::unordered++_++flat++_++map`/`unordered++_++node++_++map`
+分别借鉴 `std::unordered++_++set` 和
+`std::unordered++_++map`的设计，并在其内部数据结构（与标准规定的闭寻址方式截然不同）允许或需要时，对接口进行相应调整。
+
+Boost.Unordered 提供的开放寻址容器仅兼容符合
+C{plus}{plus}1（或更高版本）的编译器，且不再对移动语义、变参模板等语言特性进行模拟实现。这些容器完全符合
+ https://en.cppreference.com/w/cpp/named_req/AllocatorAwareContainer[分配器感知]
+规范，并支持
+ https://en.cppreference.com/w/cpp/named_req/Allocator#Fancy_pointers[花式指针]。
+
+与 C{plus}{plus} 无序关联容器的主要区别在于：
+
+* 总体特性：
++
+** `begin()` 不是常数时间复杂度操作。
+** `erase(iterator)`
+不返回指向下一元素的迭代器，而是返回一个代理对象，该对象可按需转换为目标迭代器；这可以避免在无需迭代器时可能产生的高昂递增操作开销。
+** 未提供用于桶管理的 API（除 `bucket++_++count` 外）。
+** 容器的最大负载因子由内部自动管理，用户无法手动设置。通过公开函数
+`max++_++load`
+获取的最大负载值，在高负载情况下执行删除操作时可能会降低。
+* 扁平容器（`boost::unordered++_++flat++_++set` 与
+`boost::unordered++_++flat++_++map`）：
++
+** `value++_++type` 必须支持移动构造。
+** 在重哈希的过程中，指针稳定性无法保持。
+** 不提供节点提取/插入的 API 接口。
+
+[[compliance_concurrent_containers]]
+=== 并发容器
+
+C{plus}{plus}
+标准目前尚未针对此类或任何其他类型的并发数据结构制定规范。`boost::concurrent++_++flat++_++set`/`boost::concurrent++_++node++_++set`
+与
+`boost::concurrent++_++flat++_++map`/`boost::concurrent++_++node++_++map`
+的 API 分别基于 `std::unordered++_++flat++_++set` 和
+`std::unordered++_++flat++_++map`
+建模，其关键区别在于：由于迭代器在并发场景中存在固有缺陷（高竞争、易死锁），因此不提供迭代器。故
+Boost.Unordered 并发容器技术上不符合
+ https://en.cppreference.com/w/cpp/named_req/Container[容器]
+模型，但满足除涉及迭代器之外的所有
+ https://en.cppreference.com/w/cpp/named_req/AllocatorAwareContainer[分配器感知]
+容器的要求（包括对
+ https://en.cppreference.com/w/cpp/named_req/Allocator#Fancy_pointers[花式指针]
+的支持）。
+
+在非并发无序容器中，迭代器主要有两项核心功能：
+
+* 访问先前通过查找定位的元素。
+* 容器遍历。
+
+为替代迭代器，Boost.Unordered
+并发容器使用__内部访问__机制作为线程安全的替代方案。传统操作会返回指向容器中既有元素的迭代器（例如下列）：
+
+[source,highlight]
+----
+iterator find(const key_type& k);
+std::pair<iterator, bool> insert(const value_type& obj);
+----
+
+被改造为接受传递该元素的__访问函数__：
+
+[source,highlight]
+----
+template<class F> size_t visit(const key_type& k, F f);
+template<class F> bool insert_or_visit(const value_type& obj, F f);
+----
+
+（第二种情况中，仅当表中存在与 `obj` 等价元素时才会调用
+`f`，而非在插入成功时调用）。容器遍历通过以下方式实现：
+
+[source,highlight]
+----
+template<class F> size_t visit_all(F f);
+----
+
+在支持并行算法的 C{plus}{plus}17
+编译器中提供并行化版本。通常，并发容器的接口通过将迭代器替换为访问机制的过程从非并发版本派生。对于常规映射，`iterator`
+和 `const++_++iterator`
+分别提供对元素的非常量和常量访问；此处访问权限取决于所用成员函数的常量性（同时提供
+`++*++cvisit` 重载用于显式常量访问）。对于
+`boost::concurrent++_++flat++_++set`，访问操作始终为常量。
+
+`boost::concurrent++_++flat++_++map`/`boost::concurrent++_++node++_++map`
+未提供的一个关键操作是 `operator++[]++`/`at`，该功能可通过
+link:reference/concurrent_flat_map_zh_Hans.adoc#concurrent_flat_map_try_emplace_or_cvisit[`try++_++emplace++_++or++_++visit`]
+实现替代（该方式更为复杂）。
+
+[[footer]]
+[[footer-text]]
+最后更新于 2025年 10月 31日 21:30:55 UTC

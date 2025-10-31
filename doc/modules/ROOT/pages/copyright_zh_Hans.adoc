@@ -1,0 +1,24 @@
+[[header]]
+== 版权与许可协议
+
+[[content]]
+*丹尼尔·詹姆斯 (Daniel James)*
+
+版权所有 © 2003, 2004 杰里米·B·梅廷-谢泼德 (Jeremy B. Maitin-Shepard)
+
+版权所有 © 2005-2008 丹尼尔·詹姆斯(Daniel James)
+
+版权所有 © 2022-2025 克里斯蒂安·马扎卡斯 (Christian Mazakas)
+
+版权所有 © 2022-2025 华金·M·洛佩斯·穆尼奥斯(Joaquín M López Muñoz)
+
+版权所有 © 2022-2023 彼得·迪莫夫 (Peter Dimov)
+
+版权所有 © 2024 布雷登·加涅茨基 (Braden Ganetsky)
+
+根据Boost软件许可证1.0版分发。（详见随附文件 LICENSE++_++1++_++0.txt
+或访问 http://www.boost.org/LICENSE_1_0.txt获取副本。）
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年 10月 31日 21:31:27 UTC

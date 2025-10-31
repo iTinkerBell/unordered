@@ -1,0 +1,152 @@
+[[header]]
+== 数据结构
+
+[[content]]
+[[structures_closed_addressing_containers]]
+=== 闭寻址容器
+
+Boost.Unordered
+提供了速度最快的闭寻址实现之一，该结构通常被称为 https://en.wikipedia.org/wiki/Hash_table#Separate_chaining[分离链接法]。其数据结构示例如下：
+
+[[img-bucket-groups]]
+image:bucket-groups.png[桶组]
+
+图1. 基础桶组实现方案
+
+系统分配一个"桶"数组，其中每个桶分别指向其专属的链表。这种结构使得桶迭代能直接满足标准要求。但采用此布局进行整体容器迭代通常较慢，因为需检查每个桶的占用状态，其时间复杂度为`O(bucket++_++count() {plus} size())`，而标准要求复杂度应为`O(size())`。
+
+典型的标准库实现最终会形成如下图所示的结构：
+
+link:_images/singly-linked.png[image:singly-linked.png[单向链表]]
+
+图 2. 典型标准库实现结构
+
+值得注意的是，此方案仅被libc{plus}{plus}和libstdc{plus}{plus}采用；MSVC
+Dinkumware实现则使用了不同方案。关于标准库容器的更详细分析可参阅 http://bannalia.blogspot.com/2013/10/implementation-of-c-unordered.html[此文]。
+
+这种非常规数据结构通过将所有节点连成单向链表来实现高效全局迭代。需注意：桶指向其元素起始节点的__前驱节点__，这样设计的目的是在保持高效元素删除的同时，无需引入双向链表。但这种数据结构不可避免地带来了额外的间接访问开销。例如，要访问某个桶的第一个元素，必须执行类似以下操作：
+
+[source,highlight]
+----
+auto const idx = get_bucket_idx(hash_function(key));
+node* p = buckets[idx]; // 首次加载
+node* n = p->next; // 二次加载
+if (n && is_in_bucket(n, idx)) {
+  value_type const& v = *n; // 三次加载
+  // ...
+}
+----
+
+若采用基础的桶组布局，则仅需执行以下操作：
+
+[source,highlight]
+----
+auto const idx = get_bucket_idx(hash_function(key));
+node* n = buckets[idx]; // 首次加载
+if (n) {
+  value_type const& v = *n; // 二次加载
+  // ...
+}
+----
+
+实际上，这种额外的间接访问会对常见操作（如 `insert`、`find` 和
+`erase`）产生显著的性能影响。但为了保持容器迭代的高效性，Boost.Unordered
+引入了一种新颖的数据结构——“桶组”。桶组是桶数组某个分区的定宽视图，它包含一个位掩码（`std::size++_++t`
+类型）用于跟踪桶的占用状态，并包含两个指针以形成非空组之间的双向链表。其结构示例如下：
+
+[[img-fca-layout]]
+image:fca.png[fca]
+
+图 3. Boost 采用的新布局结构
+
+过将容器全局迭代转换为遍历非空桶组（该操作具有常数时间复杂度），系统将整体时间复杂度恢复至
+`O(size())`。每个桶组仅占用 4 个机器字长的空间，其管理的桶数量为
+`sizeof(std::size++_++t) ++*++ CHAR++_++BIT`，这意味着在所有常见实现架构中，桶组为每个桶引入的空间开销仅为
+4 比特。
+
+关于 Boost.Unordered
+闭寻址实现的更详细说明请参阅 https://bannalia.blogspot.com/2022/06/advancing-state-of-art-for.html[外部文章]。若需了解实现原理的更多信息，请参阅link:rationale_zh_Hans.adoc#rationale_closed_addressing_containers[相关说明章节]。
+
+[[structures_open_addressing_containers]]
+=== 开放寻址容器
+
+下图展示`boost::unordered++_++flat++_++set`/`unordered++_++node++_++set`及`boost:unordered++_++flat++_++map`/`unordered++_++node++_++map`的基础内部布局.
+
+[[img-foa-layout]]
+image:foa.png[foa]
+
+图4. Boost.Unordered采用的开放寻址布局结构.
+
+与所有开放寻址容器一样，元素（对于 `boost::unordered++_++node++_++set`
+和 `boost::unordered++_++node++_++map`
+则是元素节点的指针）直接存储在桶数组中。该数组在逻辑上被划分为 2^_n_^
+个组，每组包含 15
+个元素。除桶数组外，还存在一个关联的__元数据数组__，其中包含 2^_n_^ 个
+16 字节的字。
+
+[[img-foa-metadata]]
+image:foa-metadata.png[foa元数据]
+
+图 5. 元数据字结构解析。
+
+每个元数据字被划分为 15 个 _h_~_i_~
+字节（每个对应一个关联的桶）和一个__溢出字节__（图示中的
+_ofw_）。_h_~_i_~ 的取值为：
+
+* 0 表示对应桶为空.
+* 1
+用于表示一种特殊的空桶（称为__哨兵桶__），该机制在容器完全遍历时内部用于终止迭代。
+* 若桶已被占用，则存储从元素哈希值推导出的__缩减哈希值__。
+
+当用哈希值__h__查找元素时，https://en.wikipedia.org/wiki/SSE2[SSE2]和 https://en.wikipedia.org/wiki/ARM_architecture_family#Advanced_SIMD_(Neon)[Neon]等SIMD技术能以少量CPU指令快速扫描整个元数据字：不匹配桶立即排除，缩减哈希值匹配的桶需与对应元素进行完整比对。若未找到目标元素，则检查溢出字节：
+
+* 若位置 _h_ mod 8 的比特位为零，则查找终止（确认元素不存在）。
+* 若该比特位为1（表示该组已__溢出__），则通过 https://en.wikipedia.org/wiki/Quadratic_probing[_二次探查法_]检查后续组，并重复此过程。
+
+插入操作的算法逻辑类似：通过 SIMD
+技术定位空桶，当遍历到已满的组时，会将其对应的溢出位设置为 1。
+
+在不支持 SIMD
+的体系架构中，逻辑布局不变，但采用__位交织__技术编码元数据字：仅用标准算术和逻辑运算即可模拟接近SIMD的性能.
+
+[[img-foa-metadata-interleaving]]
+image:foa-metadata-interleaving.png[foa元数据位交织]
+
+图 6. 位交织元数据字结构.
+
+关于 Boost.Unordered
+开放寻址实现的更详细说明请参阅 https://bannalia.blogspot.com/2022/11/inside-boostunorderedflatmap.html[外部文章]。若需了解实现原理的更多信息，请参阅link:rationale_zh_Hans.adoc#rationale_open_addresing_containers[相关说明章节]。
+
+[[structures_concurrent_containers]]
+=== 并发容器
+
+`boost::concurrent++_++flat++_++set`/`boost::concurrent++_++node++_++set`和`boost::concurrent++_++flat++_++map`/`boost::concurrent++_++node++_++map`采用前述link:structures_zh_Hans.adoc#structures_open_addressing_containers[开放寻址布局]，并在此基础上增加了同步机制。
+
+[[img-cfoa-layout]]
+image:cfoa.png[cfoa]
+
+图7. Boost.Unordered采用的并发开放寻址布局结构.
+
+采用两级同步机制：
+
+* 容器级：读写互斥锁控制所有操作访问。通常情况下，即使是修改操作也采用读模式访问（即可并发执行），因此在大多数实际应用场景中，该层级不会出现线程争用。仅当执行重哈希或容器级操作（如交换或赋值）时，才会采用写模式访问（即阻塞式）。
+* 组级：每个包含15个槽位的组都配备一个8字节的字，其中包含：
++
+** 一个用于同步访问组内任意元素的读写自旋锁.
+** 用于乐观插入的原子__插入计数器__（如下所述）.
+
+通过原子操作访问组元数据，查找在（组级别上）无锁状态下进行，直至需对先前经SIMD匹配的元素进行实际比较时，才使用组自旋锁.
+
+插入操作采用如下__乐观算法__：
+
+* 在探查序列的初始组中，插入计数器的值会被本地记录（我们称此值为`c0`）。
+* 查找操作按上述方式执行。若查找未发现相等元素，则会在探查序列中依次锁定/解锁各个分组来搜索可用插槽。
+* 当定位到可用插槽时，会抢先占用该插槽（设置其缩减哈希值）并原子地递增插入计数器：若在整个操作期间没有其他线程递增过该计数器（通过与`c0`比对确认），则操作成功并完成插入；否则回滚并重新开始。
+
+该算法在查找和实际插入阶段都具有极低的争用，其代价是：当其他线程从同一初始组开始执行插入操作并成功时，当前线程的计算可能需要重新执行。实际应用中，重启频率极低（部分基准测试中为百万分之一量级）.
+
+如需了解有关实现原理的更多信息，请阅读link:rationale_zh_Hans.adoc#rationale_concurrent_containers[相关说明章节]。
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年 10月 31日 21:43:27 UTC

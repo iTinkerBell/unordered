@@ -1,0 +1,153 @@
+[[header]]
+== 相等性谓词与哈希函数
+
+[[content]]
+[[preamble]]
+关联容器使用排序关系来规定元素的存储方式，而无序关联容器则依赖相等性谓词与哈希函数。例如，link:reference/unordered_map_zh_Hans.adoc[`boost::unordered++_++map`]
+的声明如下：
+
+[source,highlight]
+----
+template <
+    class Key, class Mapped,
+    class Hash = boost::hash<Key>,
+    class Pred = std::equal_to<Key>,
+    class Alloc = std::allocator<std::pair<Key const, Mapped> > >
+class unordered_map;
+----
+
+哈希函数之所以排在首位，是因为用户可能希望更改哈希函数而不改变相等性谓词。例如，若要使用
+ https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1a_hash[FNV-1a哈希]，可以这样编写：
+
+[source,highlight]
+----
+boost::unordered_map<std::string, int, hash::fnv_1a>
+    dictionary;
+----
+
+示例目录中提供了 link:../../../examples/fnv1.hpp[FNV-1a的实现]。
+
+若需使用不同的相等性函数，则必须配套使用对应的哈希函数。例如，要实现不区分大小写的字典，就需要定义不区分大小写的相等性函数和配套的哈希函数：
+
+[source,highlight]
+----
+struct iequal_to
+{
+    bool operator()(std::string const& x,
+        std::string const& y) const
+    {
+        return boost::algorithm::iequals(x, y, std::locale());
+    }
+};
+
+struct ihash
+{
+    std::size_t operator()(std::string const& x) const
+    {
+        std::size_t seed = 0;
+        std::locale locale;
+
+        for(std::string::const_iterator it = x.begin();
+            it != x.end(); ++it)
+        {
+            boost::hash_combine(seed, std::toupper(*it, locale));
+        }
+
+        return seed;
+    }
+};
+----
+
+随后可在不区分大小写的字典中使用它：
+
+[source,highlight]
+----
+boost::unordered_map<std::string, int, ihash, iequal_to>
+    idictionary;
+----
+
+这是位于
+link:../../../examples/case_insensitive.hpp[/libs/unordered/examples/case++_++insensitive.hpp]
+示例的简化版本，该版本支持其他区域设置和字符串类型。
+
+[width="100%",cols="50%,50%",]
+|===
+a|
+注意
+
+|使用相等运算符（`==`）配合自定义相等性函数时需特别注意，尤其是在使用函数指针的情况下。若比较两个使用不同相等性函数的容器，将导致未定义行为。对于大多数无状态的函数对象而言，不可能发生这种结果——因为只有当两个容器使用相同的相等性函数时才能进行比较，此时可确保相等性函数是一致的。但若使用函数指针或带状态的相等性函数（例如`boost::function`），则可能引发问题。
+|===
+
+[[hash_equality_custom_types]]
+=== 自定义类型
+
+类似地，自定义类型也可使用自定义哈希函数：
+
+[source,highlight]
+----
+struct point {
+    int x;
+    int y;
+};
+
+bool operator==(point const& p1, point const& p2)
+{
+    return p1.x == p2.x && p1.y == p2.y;
+}
+
+struct point_hash
+{
+    std::size_t operator()(point const& p) const
+    {
+        std::size_t seed = 0;
+        boost::hash_combine(seed, p.x);
+        boost::hash_combine(seed, p.y);
+        return seed;
+    }
+};
+
+boost::unordered_multiset<point, point_hash> points;
+----
+
+鉴于 link:../../../../container_hash/index.html[Boost.Hash]
+是默认的哈希函数，我们只需让自定义类型兼容
+Boost.Hash，即可免于显式指定哈希函数。
+
+[source,highlight]
+----
+struct point {
+    int x;
+    int y;
+};
+
+bool operator==(point const& p1, point const& p2)
+{
+    return p1.x == p2.x && p1.y == p2.y;
+}
+
+std::size_t hash_value(point const& p) {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, p.x);
+    boost::hash_combine(seed, p.y);
+    return seed;
+}
+
+// 现在默认函数对象可正常工作
+boost::unordered_multiset<point> points;
+----
+
+详见 link:../../../../container_hash/index.html[Boost.Hash
+文档]了解具体实现方式。请注意该实现依赖于对标准的扩展功能，因此不适用于其他版本的无序关联容器实现——您需要显式使用
+Boost.Hash 才能获得此功能。
+
+.表1：哈希函数与相等性函数的访问方法
+[width="100%",cols="50%,50%",options="header",]
+|===
+|方法 |描述
+|`hasher hash++_++function() const` |返回容器的哈希函数。
+|`key++_++equal key++_++eq() const` |返回容器的键相等性函数。
+|===
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年10月31日 21:31:58 UTC

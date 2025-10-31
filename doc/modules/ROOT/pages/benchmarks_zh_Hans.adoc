@@ -1,0 +1,859 @@
+[[header]]
+== 基准测试
+
+[[content]]
+[[benchmarks_boostunordered_multiset]]
+=== boost::unordered++_[++multi++]++set
+
+所有基准测试均使用`unordered++_++set++<++unsigned int++>++`(非重复元素）
+和`unordered++_++multiset++<++unsigned int++>++`（重复元素）创建。源代码可 https://github.com/boostorg/boost_unordered_benchmarks/tree/boost_unordered_set[在此处获取]。
+
+插入基准测试会插入`n`个随机值，其中`n`的范围在10,000至300万之间。在重复值测试场景中，同一组随机值会平均重复插入
+5 次。
+
+在擦除基准测试中，随机删除所有 `n`
+个元素直至容器为空。通过键擦除操作使用 `erase(const key++_++type&)`
+方法，每次调用将移除整个等效元素组。
+
+成功查找基准测试通过按照元素的原始插入顺序查找全部 `n` 个值来完成。
+
+未命中查找基准测试使用不同种子值生成的`n`个随机整数进行。
+
+[[benchmarks_gcc_12_libstdc_v3_x64]]
+==== GCC 12 {plus} libstdc{plus}{plus}-v3, x64
+
+[[benchmarks_insertion]]
+===== 插入
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/gcc/running%20insertion.xlsx.practice.png[image:benchmarks-set/gcc/running%20insertion.xlsx.practice.png[插入的执行.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/running%20insertion.xlsx.practice%20non-unique.png[image:benchmarks-set/gcc/running%20insertion.xlsx.practice%20non-unique.png[插入的执行.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/running%20insertion.xlsx.practice%20non-unique%205.png[image:benchmarks-set/gcc/running%20insertion.xlsx.practice%20non-unique%205.png[插入的执行.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/gcc/running%20insertion.xlsx.practice%20norehash.png[image:benchmarks-set/gcc/running%20insertion.xlsx.practice%20norehash.png[插入的执行.xlsx.practice
+norehash,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/running%20insertion.xlsx.practice%20norehash%20non-unique.png[image:benchmarks-set/gcc/running%20insertion.xlsx.practice%20norehash%20non-unique.png[插入的执行.xlsx.practice
+norehash non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/running%20insertion.xlsx.practice%20norehash%20non-unique%205.png[image:benchmarks-set/gcc/running%20insertion.xlsx.practice%20norehash%20non-unique%205.png[插入的执行.xlsx.practice
+norehash non unique 5,width=250]]
+
+|非重复元素, +
+预先`reserve` |重复元素, +
+预先`reserve` |重复元素, +
+最大负载因子 5, +
+预先`reserve`
+|===
+
+[[benchmarks_erasure]]
+===== 擦除
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/gcc/scattered%20erasure.xlsx.practice.png[image:benchmarks-set/gcc/scattered%20erasure.xlsx.practice.png[分散式擦除.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20erasure.xlsx.practice%20non-unique.png[image:benchmarks-set/gcc/scattered%20erasure.xlsx.practice%20non-unique.png[分散式擦除.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20erasure.xlsx.practice%20non-unique%205.png[image:benchmarks-set/gcc/scattered%20erasure.xlsx.practice%20non-unique%205.png[分散式擦除.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+
+a|
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20erasure%20by%20key.xlsx.practice%20non-unique.png[image:benchmarks-set/gcc/scattered%20erasure%20by%20key.xlsx.practice%20non-unique.png[按键进行的分散式擦除.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20erasure%20by%20key.xlsx.practice%20non-unique%205.png[image:benchmarks-set/gcc/scattered%20erasure%20by%20key.xlsx.practice%20non-unique%205.png[按键分散式擦除.xlsx.practice
+non unique 5,width=250]]
+
+a|
+
+|通过键操作， 重复元素 |通过键操作, 重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_successful_lookup]]
+===== 成功查找
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/gcc/scattered%20successful%20looukp.xlsx.practice.png[image:benchmarks-set/gcc/scattered%20successful%20looukp.xlsx.practice.png[分散式成功查找.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20successful%20looukp.xlsx.practice%20non-unique.png[image:benchmarks-set/gcc/scattered%20successful%20looukp.xlsx.practice%20non-unique.png[分散式成功查找.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20successful%20looukp.xlsx.practice%20non-unique%205.png[image:benchmarks-set/gcc/scattered%20successful%20looukp.xlsx.practice%20non-unique%205.png[分散式成功查找.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_unsuccessful_lookup]]
+===== 未命中查找
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/gcc/scattered%20unsuccessful%20looukp.xlsx.practice.png[image:benchmarks-set/gcc/scattered%20unsuccessful%20looukp.xlsx.practice.png[分散式未命中查找.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique.png[image:benchmarks-set/gcc/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique.png[分散式未命中查找.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/gcc/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique%205.png[image:benchmarks-set/gcc/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique%205.png[分散式未命中查找.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_clang_15_libc_x64]]
+==== Clang 15 {plus} libc{plus}{plus}, x64
+
+[[benchmarks_insertion_2]]
+===== 插入
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice.png[image:benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice.png[插入的执行.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20non-unique.png[image:benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20non-unique.png[插入的执行.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20non-unique%205.png[image:benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20non-unique%205.png[插入的执行.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20norehash.png[image:benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20norehash.png[插入的执行.xlsx.practice
+norehash,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20norehash%20non-unique.png[image:benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20norehash%20non-unique.png[插入的执行.xlsx.practice
+norehash non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20norehash%20non-unique%205.png[image:benchmarks-set/clang_libcpp/running%20insertion.xlsx.practice%20norehash%20non-unique%205.png[插入的执行.xlsx.practice
+norehash non unique 5,width=250]]
+
+|非重复元素, +
+预先`reserve` |重复元素, +
+预先`reserve` |重复元素, +
+最大负载因子 5, +
+预先`reserve`
+|===
+
+[[benchmarks_erasure_2]]
+===== 擦除
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20erasure.xlsx.practice.png[image:benchmarks-set/clang_libcpp/scattered%20erasure.xlsx.practice.png[分散式擦除.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20erasure.xlsx.practice%20non-unique.png[image:benchmarks-set/clang_libcpp/scattered%20erasure.xlsx.practice%20non-unique.png[分散式擦除.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20erasure.xlsx.practice%20non-unique%205.png[image:benchmarks-set/clang_libcpp/scattered%20erasure.xlsx.practice%20non-unique%205.png[分散式擦除.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+
+a|
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20erasure%20by%20key.xlsx.practice%20non-unique.png[image:benchmarks-set/clang_libcpp/scattered%20erasure%20by%20key.xlsx.practice%20non-unique.png[按键进行的分散式擦除.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20erasure%20by%20key.xlsx.practice%20non-unique%205.png[image:benchmarks-set/clang_libcpp/scattered%20erasure%20by%20key.xlsx.practice%20non-unique%205.png[按键分散式擦除.xlsx.practice
+non unique 5,width=250]]
+
+a|
+
+|通过键操作， 重复元素 |通过键操作, 重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_successful_lookup_2]]
+===== 成功查找
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20successful%20looukp.xlsx.practice.png[image:benchmarks-set/clang_libcpp/scattered%20successful%20looukp.xlsx.practice.png[分散式成功查找.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20successful%20looukp.xlsx.practice%20non-unique.png[image:benchmarks-set/clang_libcpp/scattered%20successful%20looukp.xlsx.practice%20non-unique.png[分散式成功查找.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20successful%20looukp.xlsx.practice%20non-unique%205.png[image:benchmarks-set/clang_libcpp/scattered%20successful%20looukp.xlsx.practice%20non-unique%205.png[分散式成功查找.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_unsuccessful_lookup_2]]
+===== 未命中查找
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20unsuccessful%20looukp.xlsx.practice.png[image:benchmarks-set/clang_libcpp/scattered%20unsuccessful%20looukp.xlsx.practice.png[分散式未命中查找.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique.png[image:benchmarks-set/clang_libcpp/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique.png[分散式未命中查找.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/clang_libcpp/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique%205.png[image:benchmarks-set/clang_libcpp/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique%205.png[分散式未命中查找.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_visual_studio_2022_dinkumware_x64]]
+==== Visual Studio 2022 {plus} Dinkumware, x64
+
+[[benchmarks_insertion_3]]
+===== 插入
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/vs/running%20insertion.xlsx.practice.png[image:benchmarks-set/vs/running%20insertion.xlsx.practice.png[插入的执行.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/running%20insertion.xlsx.practice%20non-unique.png[image:benchmarks-set/vs/running%20insertion.xlsx.practice%20non-unique.png[插入的执行.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/running%20insertion.xlsx.practice%20non-unique%205.png[image:benchmarks-set/vs/running%20insertion.xlsx.practice%20non-unique%205.png[插入的执行.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/vs/running%20insertion.xlsx.practice%20norehash.png[image:benchmarks-set/vs/running%20insertion.xlsx.practice%20norehash.png[插入的执行.xlsx.practice
+norehash,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/running%20insertion.xlsx.practice%20norehash%20non-unique.png[image:benchmarks-set/vs/running%20insertion.xlsx.practice%20norehash%20non-unique.png[插入的执行.xlsx.practice
+norehash non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/running%20insertion.xlsx.practice%20norehash%20non-unique%205.png[image:benchmarks-set/vs/running%20insertion.xlsx.practice%20norehash%20non-unique%205.png[插入的执行.xlsx.practice
+norehash non unique 5,width=250]]
+
+|非重复元素, +
+预先`reserve` |重复元素, +
+预先`reserve` |重复元素, +
+最大负载因子 5, +
+预先`reserve`
+|===
+
+[[benchmarks_erasure_3]]
+===== 擦除
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/vs/scattered%20erasure.xlsx.practice.png[image:benchmarks-set/vs/scattered%20erasure.xlsx.practice.png[分散式擦除.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20erasure.xlsx.practice%20non-unique.png[image:benchmarks-set/vs/scattered%20erasure.xlsx.practice%20non-unique.png[分散式擦除.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20erasure.xlsx.practice%20non-unique%205.png[image:benchmarks-set/vs/scattered%20erasure.xlsx.practice%20non-unique%205.png[分散式擦除.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+
+a|
+
+a|
+link:_images/benchmarks-set/vs/scattered%20erasure%20by%20key.xlsx.practice%20non-unique.png[image:benchmarks-set/vs/scattered%20erasure%20by%20key.xlsx.practice%20non-unique.png[按键进行的分散式擦除.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20erasure%20by%20key.xlsx.practice%20non-unique%205.png[image:benchmarks-set/vs/scattered%20erasure%20by%20key.xlsx.practice%20non-unique%205.png[按键分散式擦除.xlsx.practice
+non unique 5,width=250]]
+
+a|
+
+|通过键操作， 重复元素 |通过键操作, 重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_successful_lookup_3]]
+===== 成功查找
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/vs/scattered%20successful%20looukp.xlsx.practice.png[image:benchmarks-set/vs/scattered%20successful%20looukp.xlsx.practice.png[分散式成功查找.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20successful%20looukp.xlsx.practice%20non-unique.png[image:benchmarks-set/vs/scattered%20successful%20looukp.xlsx.practice%20non-unique.png[分散式成功查找.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20successful%20looukp.xlsx.practice%20non-unique%205.png[image:benchmarks-set/vs/scattered%20successful%20looukp.xlsx.practice%20non-unique%205.png[分散式成功查找.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_unsuccessful_lookup_3]]
+===== 未命中查找
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-set/vs/scattered%20unsuccessful%20looukp.xlsx.practice.png[image:benchmarks-set/vs/scattered%20unsuccessful%20looukp.xlsx.practice.png[分散式未命中查找.xlsx.practice,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique.png[image:benchmarks-set/vs/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique.png[分散式未命中查找.xlsx.practice
+non unique,width=250]]
+
+a|
+link:_images/benchmarks-set/vs/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique%205.png[image:benchmarks-set/vs/scattered%20unsuccessful%20looukp.xlsx.practice%20non-unique%205.png[分散式未命中查找.xlsx.practice
+non unique 5,width=250]]
+
+|非重复元素 |重复元素 |重复元素, +
+最大负载因子 5
+|===
+
+[[benchmarks_boostunordered_flatnode_map]]
+=== boost::unordered++_++(flat++|++node)++_++map
+
+所有基准测试均为使用以下链接来创建的：
+
+* https://abseil.io/docs/cpp/guides/container[`absl::flat++_++hash++_++map`]`++<++uint64++_++t, uint64++_++t++>++`
+* `boost::unordered++_++map++<++uint64++_++t, uint64++_++t++>++`
+* `boost::unordered++_++flat++_++map++<++uint64++_++t, uint64++_++t++>++`
+* `boost::unordered++_++node++_++map++<++uint64++_++t, uint64++_++t++>++`
+
+源代码可 https://github.com/boostorg/boost_unordered_benchmarks/tree/boost_unordered_flat_map[在此处获取]。
+
+插入基准测试的操作将插入`n`个随机值，其中`n`的范围在10,000至1000万之间。
+
+擦除基准测试会遍历全部 `n`
+个元素，并删除其中键值为奇数的元素（平均约占50%）。
+
+成功查找基准测试通过按照元素的原始插入顺序查找全部 `n` 个值来完成。
+
+未命中查找基准测试使用不同种子值生成的`n`个随机整数进行。
+
+[[benchmarks_gcc_12_x64]]
+==== GCC 12, x64
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/gcc-x64/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/gcc-x64/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/gcc-x64/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/gcc-x64/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/gcc-x64/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/gcc-x64/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/gcc-x64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/gcc-x64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_clang_15_x64]]
+==== Clang 15, x64
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/clang-x64/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/clang-x64/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-x64/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/clang-x64/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-x64/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/clang-x64/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-x64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/clang-x64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_visual_studio_2022_x64]]
+==== Visual Studio 2022, x64
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/vs-x64/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/vs-x64/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/vs-x64/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/vs-x64/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/vs-x64/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/vs-x64/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/vs-x64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/vs-x64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_clang_12_arm64]]
+==== Clang 12, ARM64
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/clang-arm64/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/clang-arm64/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-arm64/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/clang-arm64/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-arm64/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/clang-arm64/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-arm64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/clang-arm64/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_gcc_12_x86]]
+==== GCC 12, x86
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/gcc-x86/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/gcc-x86/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/gcc-x86/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/gcc-x86/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/gcc-x86/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/gcc-x86/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/gcc-x86/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/gcc-x86/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_clang_15_x86]]
+==== Clang 15, x86
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/clang-x86/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/clang-x86/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-x86/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/clang-x86/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-x86/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/clang-x86/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/clang-x86/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/clang-x86/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_visual_studio_2022_x86]]
+==== Visual Studio 2022, x86
+
+[width="100%",cols="25%,25%,25%,25%",]
+|===
+a|
+link:_images/benchmarks-flat_map/vs-x86/Running%20insertion.xlsx.plot.png[image:benchmarks-flat_map/vs-x86/Running%20insertion.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/vs-x86/Running%20erasure.xlsx.plot.png[image:benchmarks-flat_map/vs-x86/Running%20erasure.xlsx.plot.png[插入的执行.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/vs-x86/Scattered%20successful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/vs-x86/Scattered%20successful%20looukp.xlsx.plot.png[分散式成功查找.xlsx.plot,width=250]]
+
+a|
+link:_images/benchmarks-flat_map/vs-x86/Scattered%20unsuccessful%20looukp.xlsx.plot.png[image:benchmarks-flat_map/vs-x86/Scattered%20unsuccessful%20looukp.xlsx.plot.png[分散式未命中查找.xlsx.plot,width=250]]
+
+|插入的执行 |擦除的执行 |成功查找 |未命中查找
+|===
+
+[[benchmarks_boostconcurrent_flatnode_map]]
+=== boost::concurrent++_++(flat++|++node)++_++map
+
+所有基准测试均为使用以下链接来创建的：
+
+* https://spec.oneapi.io/versions/latest/elements/oneTBB/source/containers/concurrent_hash_map_cls.html[`oneapi::tbb::concurrent++_++hash++_++map`]`++<++int, int++>++`
+* https://github.com/greg7mdp/gtl/blob/main/docs/phmap.md[`gtl::parallel++_++flat++_++hash++_++map`]`++<++int, int++>++`（含64个子映射）
+* `boost::concurrent++_++flat++_++map++<++int, int++>++`
+* `boost::concurrent++_++node++_++map++<++int, int++>++`
+
+源代码可 https://github.com/boostorg/boost_unordered_benchmarks/tree/boost_concurrent_flat_map[在此处获取]。
+
+基准测试使用__T__个线程（数量1至16之间）并发执行随机选择的操作，这些操作包括**更新**、**成功查找**和**未命中查找**三种类型。操作使用的键遵循 https://en.wikipedia.org/wiki/Zipf%27s_law#Formal_definition[齐夫分布]，并采用不同的__偏斜__参数：偏斜值越高，键的分布越集中在取值区间的较低数值区域。
+
+测试对`boost::concurrent++_++flat++_++map`与`boost::concurrent++_++node++_++map`均采用了常规访问与link:concurrent_zh_Hans.adoc#concurrent_bulk_visitation[批量访问]两种模式：对于后者，查找键会先缓存在本地数组中，待缓冲区达到link:reference/concurrent_flat_map_zh_Hans.adoc#concurrent_flat_map_constants[`bulk++_++visit++_++size`]大小时再统一处理。
+
+[[benchmarks_gcc_12_x64_2]]
+==== GCC 12, x64
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/gcc-x64/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[benchmarks_clang_15_x64_2]]
+==== Clang 15, x64
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/clang-x64/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[benchmarks_visual_studio_2022_x64_2]]
+==== Visual Studio 2022, x64
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/vs-x64/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[benchmarks_clang_12_arm64_2]]
+==== Clang 12, ARM64
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/clang-arm64/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[benchmarks_gcc_12_x86_2]]
+==== GCC 12, x86
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/gcc-x86/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[benchmarks_clang_15_x86_2]]
+==== Clang 15, x86
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/clang-x86/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[benchmarks_visual_studio_2022_x86_2]]
+==== Visual Studio 2022, x86
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.500k,%200.01.png[image:benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.500k,%200.01.png[并行工作负载.xlsx.500k&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.500k,%200.5.png[image:benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.500k,%200.5.png[并行工作负载.xlsx.500k&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.500k,%200.99.png[image:benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.500k,%200.99.png[并行工作负载.xlsx.500k&#44;
+0.99,width=250]]
+
+|50万次更新, 450万次查找 +
+偏斜=0.01 |50万次更新, 450万次查找 +
+偏斜=0.5 |50万次更新, 450万次查找 +
+偏斜=0.99
+|===
+
+[width="100%",cols="34%,33%,33%",]
+|===
+a|
+link:_images/benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.5M,%200.01.png[image:benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.5M,%200.01.png[并行工作负载.xlsx.5M&#44;
+0.01,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.5M,%200.5.png[image:benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.5M,%200.5.png[并行工作负载.xlsx.5M&#44;
+0.5,width=250]]
+
+a|
+link:_images/benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.5M,%200.99.png[image:benchmarks-concurrent_map/vs-x86/Parallel%20workload.xlsx.5M,%200.99.png[并行工作负载.xlsx.5M&#44;
+0.99,width=250]]
+
+|500万次更新, 4500万次查找 +
+偏斜=0.01 |500万次更新, 4500万次查找 +
+偏斜=0.5 |500万次更新, 4500万次查找 +
+偏斜=0.99
+|===
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年10月31日 21:29:37 ++[++UTC++]++

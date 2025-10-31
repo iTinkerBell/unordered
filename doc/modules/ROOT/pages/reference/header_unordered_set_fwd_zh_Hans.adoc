@@ -1,0 +1,11 @@
+[[header]]
+
+[[content]]
+[[header_unordered_set_fwd]]
+=== `++<++boost/unordered/unordered++_++set++_++fwd.hpp++>++` 概要
+
+前向声明link:reference/header_unordered_set_zh_Hans.adoc[`++<++boost/unordered/unordered++_++set.hpp++>++`]中的所有定义。
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年 10月 31日 21:40:05 UTC

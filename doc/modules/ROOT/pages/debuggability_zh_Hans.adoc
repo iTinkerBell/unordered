@@ -1,0 +1,147 @@
+[[header]]
+== 可调试性
+
+[[content]]
+[[debuggability_visual_studio_natvis]]
+=== Visual Studio Natvis
+
+所有容器和迭代器在 Natvis 框架中均具备自定义可视化功能。
+
+[[debuggability_using_in_your_project]]
+==== 在项目中使用
+
+若要在项目中通过 Natvis 框架实现 Boost.Unordered
+容器的可视化调试，只需将文件
+ https://github.com/boostorg/unordered/blob/develop/extra/boost_unordered.natvis[/extra/boost++_++unordered.natvis]
+作为"现有项"添加到 Visual Studio 项目中即可。
+
+[[debuggability_visualization_structure]]
+==== 可视化结构
+
+可视化方案与标准无序容器保持一致。容器单次最多显示 100
+个元素。集合类容器中每个元素的项名称显示为 `++[++i++]++`（其中`i` 为从
+`0` 开始的显示索引）。映射元素默认显示为
+`++[{++键值显示}++]++`，例如当首元素为键值对 `("abc", 1)`
+时，其项名称将显示为
+`++[++"abc"++]++`。用户可通过启用"ShowElementsByIndex"视图模式切换为按索引命名元素，此视图命名规则与标准无序容器保持一致。
+
+默认情况下，封闭寻址容器将显示
+`++[++hash++_++function++]++`、`++[++key++_++eq++]++`、适用的
+`++[++spare++_++hash++_++function++]++` 与
+`++[++spare++_++key++_++eq++]++`、`++[++allocator++]++`
+以及元素列表。若启用"detailed"视图将额外显示
+`++[++bucket++_++count++]++` 和
+`++[++max++_++load++_++factor++]++`信息；若启用"simple"视图，则仅显示元素列表而不包含其他条目。
+
+默认情况下，开放寻址容器显示
+`++[++hash++_++function++]++`、`++[++key++_++eq++]++`、`++[++allocator++]++`
+以及元素列表。若启用 "simple"
+视图，则仅显示元素列表而不包含其他条目。无论采用 SIMD 还是非 SIMD
+实现，均可通过 Natvis 框架进行可视化调试。
+
+迭代器显示方式与标准迭代器类似：指向元素的迭代器显示为元素值；结束迭代器显示为
+`++{++ 结束迭代器 }`。
+
+[[debuggability_fancy_pointers]]
+==== 花式指针
+
+分配器中使用花式指针（如
+`boost::interprocess::offset++_++ptr`）时，容器可视化功能仍可正常运作。Boost.Unordered
+通过 Natvis
+定制点支持所有类型的花式指针。`boost::interprocess::offset++_++ptr` 已在
+Boost.Interprocess 库中预定义支持，自定义类型支持方法请参阅文件
+ https://github.com/boostorg/unordered/blob/develop/extra/boost_unordered.natvis[/extra/boost++_++unordered.natvis]
+末尾注释。
+
+[[debuggability_gdb_pretty_printers]]
+=== GDB 美化打印器
+
+所有容器和迭代器均配备自定义 GDB 美化打印器。
+
+[[debuggability_using_in_your_project_2]]
+==== 在项目中使用
+
+使用美化打印器时，必须始终按以下方式启用美化打印功能。此项配置通常只需执行一次。
+
+[source,highlight]
+----
+(gdb) set print pretty on
+----
+
+默认情况下，若编译目标为 ELF 二进制格式，生成的文件将内置
+Boost.Unordered
+美化打印器。要使用内嵌的美化打印器，请确保按以下方式启用自动加载功能（此操作需在每次启动
+GDB 时执行，或将其添加到 ".gdbinit" 配置文件中）。
+
+[source,highlight]
+----
+(gdb) add-auto-load-safe-path [/path/to/executable]
+----
+
+用户可通过定义`BOOST++_++ALL++_++NO++_++EMBEDDED++_++GDB++_++SCRIPTS`
+宏，来选择在编译二进制文件时__不__嵌入美化打印器。该宏将禁用所有具备此功能的
+Boost 库中内嵌的 GDB 美化打印器。
+
+用户可通过外部非嵌入的 Python 脚本加载美化打印器：使用 `source` 命令添加
+ https://github.com/boostorg/unordered/blob/develop/extra/boost_unordered_printers.py[/extra/boost++_++unordered++_++printers.py]脚本即可。
+
+[source,highlight]
+----
+(gdb) source [/path/to/boost]/libs/unordered/extra/boost_unordered_printers.py
+----
+
+[[debuggability_visualization_structure_2]]
+==== 可视化结构
+
+可视化方案与标准无序容器保持一致：映射容器显示键到映射值的关联；集合容器显示从索引到值的关联关系。迭代器可显示为指向的元素内容，或标记为结束迭代器。下图展示了示例`boost::unordered++_++map`、示例`boost::unordered++_++set`
+及其迭代器.
+
+[source,highlight]
+----
+(gdb) print example_unordered_map
+$1 = boost::unordered_map 含 3 个元素 = {["C"] = "c", ["B"] = "b", ["A"] = "a"}
+(gdb) print example_unordered_map_begin
+$2 = 迭代器 = { {first = "C", second = "c"} }
+(gdb) print example_unordered_map_end
+$3 = 迭代器 = { 结束迭代器 }
+(gdb) print example_unordered_set
+$4 = boost::unordered_set 含 3 个元素 = {[0] = "c", [1] = "b", [2] = "a"}
+(gdb) print example_unordered_set_begin
+$5 = 迭代器 = { "c" }
+(gdb) print example_unordered_set_end
+$6 = 迭代器 = { 结束迭代器 }
+----
+
+其余容器的显示逻辑完全一致，仅在显示容器本身时将其模板名称替换为对应的
+"boost::unordered++_{++map++|++set}"。需要注意的事，每个子元素（即键、映射值或值）的显示均取决于其自身的打印设置，这可能包含其专属的美化打印器。
+
+无论采用 SIMD 还是非 SIMD 实现，均可通过 GDB 美化打印器查看。
+
+对于启用link:hash_quality_zh_Hans.adoc#hash_quality_container_statistics[容器统计]的开放寻址容器，可在
+GDB 中调用 `get++_++stats()` 方法来获取统计信息。该方法在GDB中被重写为
+ https://sourceware.org/gdb/current/onlinedocs/gdb.html/Xmethod-API.html[xmethod]
+实现，因此不会执行任何C{plus}{plus}同步代码。输出格式示例如下.
+
+[source,highlight]
+----
+(gdb) print example_flat_map.get_stats()
+$1 = [统计] = {[插入] = {[计数] = 5, [探测长度] = {平均值 = 1.0, 方差 = 0.0, 标准差 = 0.0}},
+  [成功查找] = {[计数] = 0, [探测长度] = {平均值 = 0.0, 方差 = 0.0, 标准差 = 0.0},
+    [比较次数] = {平均值 = 0.0, 方差 = 0.0, 标准差 = 0.0}}, [失败查找] = {[计数] = 5,
+    [探测长度] = {平均值 = 1.0, 方差 = 0.0, 标准差 = 0.0},
+    [比较次数] = {平均值 = 0.0, 方差 = 0.0, 标准差 = 0.0}}}
+----
+
+[[debuggability_fancy_pointers_2]]
+==== 花式指针
+
+当用户在分配器中使用花式指针（例如
+`boost::interprocess::offset++_++ptr`）时，GDB
+的美化打印器仍可正常工作。虽然这种情况不常见，但 Boost.Unordered
+为美化打印器提供了定制点，以支持任何类型的花式指针。`boost::interprocess::offset++_++ptr`的支持已在Boost.Interprocess库中预先定义，自定义类型支持方法请参阅文件
+ https://github.com/boostorg/unordered/blob/develop/extra/boost_unordered_printers.py[/extra/boost++_++unordered++_++printers.py]
+的末尾注释。
+
+[[footer]]
+[[footer-text]]
+最后更新于 2025年10月31日 21:31:42 UTC

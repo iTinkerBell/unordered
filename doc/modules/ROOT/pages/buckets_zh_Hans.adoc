@@ -1,0 +1,113 @@
+[[header]]
+== 哈希表基础
+
+[[content]]
+[[preamble]]
+该容器由若干__桶__组成，每个桶可容纳任意数量的元素。例如，下图展示了一个包含7个桶的link:reference/unordered_set_zh_Hans.adoc#unordered_set[`boost::unordered++_++set`]，其中存储着5个元素（`A`、`B`、`C`、`D`和`E`）（此示意图仅为演示用途，实际容器通常包含更多桶）。
+
+image:buckets.png[桶]
+
+容器通过哈希函数`Hash`作用于元素的键来确定其所属的桶（对于集合而言，键即元素本身，但为统一集合与映射表的术语仍称作键）。该函数返回`std::size++_++t`类型的值。由于`std::size++_++t`的取值范围远大于桶的数量，容器会对此值进行二次转换以确定元素应存入的桶。
+
+根据指定键检索元素的过程非常简单：首先对键执行相同处理以定位对应桶，随后通过相等性谓词`Pred`将键与桶内元素进行比较以寻找匹配项。若哈希函数表现良好，元素将均匀分布于各桶中，此时仅需检查少量元素即可完成检索。
+
+关于哈希函数与相等性谓词的详细说明请参阅link:hash_equality_zh_Hans.adoc#hash_equality[后续章节]。
+
+如图所示，`A`与`D`被置于同一桶内。在此桶内查找元素时最多需要进行 2
+次比对，这会降低检索效率，该现象称为**冲突**。为维持高效运作，我们需尽可能减少冲突的发生。
+
+若使用link:reference/unordered_flat_set_zh_Hans.adoc[`boost::unordered++_++flat++_++set`]替代`boost::unordered++_++set`，其结构示意图将呈现如下形式：
+
+image:buckets-oa.png[开放寻址桶]
+
+在开放寻址式容器中，每个桶最多只能容纳一个元素；若发生冲突（如示例中的元素`D`的情况），该元素将使用原始位置附近的其他可用桶。基于此简化设计，Boost.Unordered开放寻址容器仅提供极其有限的桶访问API。
+
+.表1：桶访问方法
+[width="100%",cols="50%,50%",]
+|===
+|*所有容器* |
+
+|*方法* |*描述*
+
+|`size++_++type bucket++_++count() const` |桶的数量。
+
+|*仅限闭寻址容器* |
+
+|*方法* |*描述*
+
+|`size++_++type max++_++bucket++_++count() const` |桶数量的上限。
+
+|`size++_++type bucket++_++size(size++_++type n) const` |返回桶 `n`
+中的元素数量。
+
+|`size++_++type bucket(key++_++type const& k) const`
+|返回键`k`所对应的桶的索引。
+
+|`local++_++iterator begin(size++_++type n)`
+|返回编号为`n`的桶的起始与末尾迭代器。
+
+|`local++_++iterator end(size++_++type n)` |
+
+|`const++_++local++_++iterator begin(size++_++type n) const` |
+
+|`const++_++local++_++iterator end(size++_++type n) const` |
+
+|`const++_++local++_++iterator cbegin(size++_++type n) const` |
+
+|`const++_++local++_++iterator cend(size++_++type n) const` |
+|===
+
+[[buckets_controlling_the_number_of_buckets]]
+=== 桶数量控制
+
+当无序关联容器中的元素不断增加时，冲突次数会随之上升，从而导致性能下降。为解决此问题，容器会在插入元素过程中自动增加桶的数量。用户也可以通过调用`rehash`方法来按需调整容器的桶数量。
+
+标准规范虽未强制规定桶数量的具体选择方式，但基于容器的__负载因子__（即元素数量与桶数量的比值）提出了若干要求。同时，容器还设有一个__最大负载因子__，其运行过程中需始终将实际负载因子维持在该阈值以下。
+
+用户无法直接控制桶的数量，但可通过以下两种方式间接调控：
+
+* 用户可在构造容器或调用`rehash`方法时指定桶数量的最小值。
+* 用户可通过调用`max++_++load++_++factor`
+方法来设定最大负载因子的建议值。
+
+`max++_++load++_++factor`并不允许用户自行设定最大负载因子，该方法仅用于提供__提示__。即便如此，标准也并未强制要求容器必须严格遵守该数值。唯一强制要求负载因子必须小于最大值的场景是在调用`rehash`方法之后。但大多数实现会尝试将元素数量维持在最大负载因子以下，并将最大负载因子设定为与提示值相同或接近——除非用户提供的提示值过小或过大。
+
+.表2：桶大小控制方法
+[width="100%",cols="50%,50%",]
+|===
+|*所有容器* |
+
+|*方法* |*描述*
+
+|`X(size++_++type n)`
+|构造一个至少包含`n`个桶的空容器（`X`表示容器类型）。
+
+|`X(InputIterator i, InputIterator j, size++_++type n)`
+|构造一个至少包含`n`个桶的空容器，并插入范围`++[++i, j)`中的元素（`X`表示容器类型）。
+
+|`float load++_++factor() const` |返回每个桶的平均元素数量。
+
+|`float max++_++load++_++factor() const` |返回当前的最大负载因子。
+
+|`float max++_++load++_++factor(float z)`
+|以`z`作为提示值来更改容器的最大负载因子。 +
+**开放寻址与并发容器：**此函数无效，用户不允许更改最大负载因子。
+
+|`void rehash(size++_++type n)`
+|调整桶的数量，使其至少为`n`，并确保负载因子小于最大负载因子。
+
+|*仅限开放寻址与并发容器* |
+
+|*方法* |*描述*
+
+|`size++_++type max++_++load() const`
+|返回容器触发重新哈希前所允许容纳的最大元素数量。
+|===
+
+关于开放寻址与并发容器的`max++_++load`注意事项：在容器创建或执行`rehash`后，最大负载值将保持为`max++_++load++_++factor() ++*++ bucket++_++count()`；但在高负载场景下执行元素删除操作时，该值可能轻微下降。例如，若某个link:reference/unordered_flat_map_zh_Hans.adoc#unordered_flat_map[`boost::unordered++_++flat++_++map`]的`size()`已接近`max++_++load()`阈值，随后删除
+1,000
+个元素时，`max++_++load()`可能减少约数十个元素。此机制是Boost.Unordered为保持性能稳定而采取的内部机制，用户在规划无重组插入操作时需予以考虑。
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年10月31日 21:30:19 【UTC】

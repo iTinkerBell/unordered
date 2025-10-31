@@ -1,0 +1,121 @@
+[[header]]
+== 哈希质量
+
+[[content]]
+[[preamble]]
+为了正常工作，哈希表要求提供的哈希函数具有__高质量__，这大致意味着它应尽可能均匀地使用其`std::size++_++t`输出空间，就像随机数生成器那样——当然，不同之处在于哈希函数的值并非随机，而是由其输入参数严格决定。
+
+Boost.Unordered
+中的闭寻址容器对质量不理想的哈希函数具有较好的鲁棒性，但开放寻址和并发容器对此因素更为敏感。如果哈希函数选择不当，其性能会出现显著下降。通常，使用由link:../../../../container_hash/index.html[Boost.Hash]提供或生成的函数可确保质量达标，但在使用其他哈希算法时则需要特别谨慎。
+
+本节剩余的内容仅适用于开放寻址容器与并发容器。
+
+[[hash_quality_hash_post_mixing_and_the_avalanching_property]]
+=== 哈希后混合处理与雪崩效应属性
+
+即使提供的哈希函数不符合开放寻址所需的均匀分布特性，Boost.Unordered容器的性能通常仍可接受，这是因为库会执行内部__后混合处理__步骤来改善计算哈希值的统计特性。当然这会带来额外的计算开销；若希望禁用后混合处理功能，请按以下方式对哈希函数进行注解：
+
+[source,highlight]
+----
+struct my_string_hash_function
+{
+  using is_avalanching = std::true_type; // 指示Boost.Unordered不使用后混合处理
+
+  std::size_t operator()(const std::string& x) const
+  {
+    ...
+  }
+};
+----
+
+通过设置link:../../../../container_hash/doc/html/hash.html#ref_hash_is_avalanchinghash[`hash++_++is++_++avalanching`]特征，我们告知Boost.Unordered：`my++_++string++_++hash++_++function`具有足够高的质量，无需任何后混合处理安全网即可直接使用。但这样做的风险在于，如果哈希函数的表现未达到我们声明的理想状态，则可能导致性能下降。
+
+[[hash_quality_container_statistics]]
+=== 容器统计信息
+
+若在全局定义宏`BOOST++_++UNORDERED++_++ENABLE++_++STATS`，开放寻址容器与并发容器将计算与哈希函数质量直接相关的内部统计信息：
+
+[source,highlight]
+----
+#define BOOST_UNORDERED_ENABLE_STATS
+#include <boost/unordered/unordered_map.hpp>
+
+...
+
+int main()
+{
+  boost::unordered_flat_map<std::string, int, my_string_hash> m;
+  ... // 使用m
+
+  auto stats = m.get_stats();
+  ... // 检查统计信息
+}
+----
+
+`stats`对象提供以下统计信息：
+
+[source,highlight]
+----
+stats
+     .insertion                                     // 插入操作
+               .count                               // 操作次数
+               .probe_length                        // 每次操作的探测长度
+                            .average
+                            .variance
+                            .deviation
+     .successful_lookup                             // 查找操作（找到元素）
+                       .count                       // 操作次数
+                       .probe_length                // 每次操作的探测长度
+                                    .average
+                                    .variance
+                                    .deviation
+                       .num_comparisons             // 每次操作比较的元素数
+                                       .average
+                                       .variance
+                                       .deviation
+     .unsuccessful_lookup                           // 查找操作（未找到元素）
+                         .count                     // 操作次数
+                         .probe_length              // 每次操作的探测长度
+                                      .average
+                                      .variance
+                                      .deviation
+                         .num_comparisons           // 每次操作比较的元素数
+                                         .average
+                                         .variance
+                                         .deviation
+----
+
+系统维护三类内部操作的统计信息：插入操作（不考虑先前查找键是否存在的操作）、成功查找及未命中查找（包括插入元素时触发的内部查询）。__探测长度__是指每次操作所访问的link:structures_zh_Hans.adoc#structures_open_addressing_containers[桶组]数量。若哈希函数表现正常：
+
+* 平均探测长度应接近1.0。
+* 每次成功查找的平均比较次数应接近 1.0（即仅需核对找到的元素本身）。
+* 每次失败查找的平均比较次数应接近 0.0。
+
+我们提供了一个link:../../../benchmark/string_stats.cpp[示例程序]，用于展示以下哈希函数的容器统计信息：`boost::hash++<++std::string++>++`、 https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1a_hash[FNV-1a
+哈希算法]的实现，以及两个被错误标记为具备雪崩效应的自定义哈希函数：
+
+....
+                   boost::unordered_flat_map:   319 ms
+                                   插入: 探测长度 1.08771
+                           成功查找: 探测长度 1.06206, 比较次数 1.02121
+                         失败查找: 探测长度 1.12301, 比较次数 0.0388251
+
+           boost::unordered_flat_map, FNV-1a:   301 ms
+                                   插入: 探测长度 1.09567
+                           成功查找: 探测长度 1.06202, 比较次数 1.0227
+                         失败查找: 探测长度 1.12195, 比较次数 0.040527
+
+boost::unordered_flat_map, slightly_bad_hash:   654 ms
+                                   插入: 探测长度 1.03443
+                           成功查找: 探测长度 1.04137, 比较次数 6.22152
+                         失败查找: 探测长度 1.29334, 比较次数 11.0335
+
+         boost::unordered_flat_map, bad_hash: 12216 ms
+                                   插入: 探测长度 699.218
+                           成功查找: 探测长度 590.183, 比较次数 43.4886
+                         失败查找: 探测长度 1361.65, 比较次数 75.238
+....
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年10月31日 21:32:14 UTC

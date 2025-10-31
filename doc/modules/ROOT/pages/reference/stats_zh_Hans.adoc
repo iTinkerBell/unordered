@@ -1,0 +1,71 @@
+[[header]]
+
+[[content]]
+[[stats]]
+=== 统计信息
+
+开放寻址和并发容器可配置为持续统计受所提供哈希函数质量影响的某些内部操作。
+
+[[stats_synopsis]]
+==== 概要
+
+....
+struct stats-summary-type
+{
+  double average;
+  double variance;
+  double deviation;
+};
+
+struct insertion-stats-type
+{
+  std::size_t        count;
+  stats-summary-type probe_length;
+};
+
+struct lookup-stats-type
+{
+  std::size_t        count;
+  stats-summary-type probe_length;
+  stats-summary-type num_comparisons;
+};
+
+struct stats-type
+{
+  insertion-stats-type insertion;
+  lookup-stats-type    successful_lookup,
+                       unsuccessful_lookup;
+};
+....
+
+[[stats_stats_summary_type]]
+===== _统计摘要类型_
+
+提供数值序列的平均值、方差和标准差。
+
+[[stats_insertion_stats_type]]
+===== _插入统计类型_
+
+提供容器执行的插入操作次数及相关__探查长度__（每次操作访问的link:structures_zh_Hans.adoc#structures_open_addressing_containers[桶组]数量）的统计信息。
+
+[[stats_lookup_stats_type]]
+===== _查找统计类型_
+
+对于成功（找到元素）或失败（未找到）查找操作，提供容器执行的操作次数及相关__探查长度__（访问的link:structures_zh_Hans.adoc#structures_open_addressing_containers[桶组]数量）和每次操作的元素比较次数的统计信息。
+
+[[stats_stats_type]]
+===== _stats-type_
+
+提供容器执行的插入操作、成功及失败查找操作的统计信息。若提供的哈希函数质量良好，则：
+
+* 平均探查长度应接近1.0。
+* 对于成功查找，平均元素比较次数应接近 1.0。
+* 对于失败查找，平均元素比较次数应接近 0.0。
+
+这些统计信息可用于判断给定的哈希函数是否可被标记为link:../../../../../container_hash/doc/html/hash.html#ref_hash_is_avalanchinghash[_雪崩效应_]。
+
+'''''
+
+[[footer]]
+[[footer-text]]
+最后更新于2025年10月31日 21:40:37 UTC
